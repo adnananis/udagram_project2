@@ -1,6 +1,5 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import fs from "fs";
 import { filterImageFromURL, deleteLocalFiles } from './util/util';
 
 (async () => {
@@ -35,24 +34,31 @@ import { filterImageFromURL, deleteLocalFiles } from './util/util';
       }
 
       if (image_Url) {
-        new Promise(async resolve => {
 
-          // respnse return from filter Image URL
-          let fileName =  await filterImageFromURL(image_Url);
 
-          
-          let __fileName = fileName.substring(fileName.lastIndexOf('/')+1)        
-          var options = { root: path.join(__dirname,"util", "tmp") };          
-       
-          res.sendFile(__fileName, options, function (err: any) {
-            if (err) {
-              res.send(err);
-            }
-            else {
-             res.on('finish', async () => deleteLocalFiles([__fileName]));
-            }
+        try {
+          new Promise(async resolve => {
+
+            // respnse return from filter Image URL
+            let fileName =  await filterImageFromURL(image_Url);
+            
+            let __fileName = fileName.substring(fileName.lastIndexOf('/')+1)        
+            var options = { root: path.join(__dirname,"util", "tmp") };          
+         
+            res.sendFile(__fileName, options, function (err: any) {
+              if (err) {
+                res.send(err);
+              }
+              else {
+               res.on('finish', async () => deleteLocalFiles([__fileName]));
+              }
+            });
+            return res.status(200).send(fileName);
           });
-        });
+      } catch (e) {
+          return e;
+      }
+      
 
       }
 
