@@ -19,24 +19,7 @@ import { filterImageFromURL, deleteLocalFiles } from './util/util';
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
 
-  // @TODO1 IMPLEMENT A RESTFUL ENDPOINT
-  // GET /filteredimage?image_url={{URL}}
-  // endpoint to filter an image from a public url.
-  // IT SHOULD
-  //    1
-  //    1. validate the image_url query
-  //    2. call filterImageFromURL(image_url) to filter the image
-  //    3. send the resulting file in the response
-  //    4. deletes any files on the server on finish of the response
-  // QUERY PARAMATERS
-  //    image_url: URL of a publicly accessible image
-  // RETURNS
-  //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
-
-  /**************************************************************************** */
-
-  //! END @TODO1
-
+  
   // Root Endpoint
   // Displays a simple message to the user
   app.get("/", async (req: any, res: any) => {
@@ -53,17 +36,20 @@ import { filterImageFromURL, deleteLocalFiles } from './util/util';
 
       if (image_Url) {
         new Promise(async resolve => {
-          let value =  await filterImageFromURL(image_Url);
-          let fileName = value.substring(value.lastIndexOf('/')+1)        
-          var options = { root: path.join(__dirname,"util", "tmp") };
+
+          // respnse return from filter Image URL
+          let fileName =  await filterImageFromURL(image_Url);
+
           
-         // var fileName = "filteredimage.jpg";
-          res.sendFile(fileName, options, function (err: any) {
+          let __fileName = fileName.substring(fileName.lastIndexOf('/')+1)        
+          var options = { root: path.join(__dirname,"util", "tmp") };          
+       
+          res.sendFile(__fileName, options, function (err: any) {
             if (err) {
               res.send(err);
             }
             else {
-             res.on('finish', async () => deleteLocalFiles([value]));
+             res.on('finish', async () => deleteLocalFiles([__fileName]));
             }
           });
         });
@@ -81,27 +67,3 @@ import { filterImageFromURL, deleteLocalFiles } from './util/util';
     console.log(`press CTRL+C to stop server`);
   });
 })();
-
-// export async function filterImageFromURL(inputURL: string): Promise<string> {
-//   return new Promise(async (resolve, reject) => {
-//     try {
-//       const photo = await Jimp.read(inputURL);
-//       const outpath =
-//         "/tempStorage/filteredimage.jpg";
-//       await photo
-//         .write(__dirname + outpath, (img) => {
-//           resolve(__dirname + outpath);
-//         });
-//     } catch (error) {
-//       reject(error);
-//     }
-//   });
-// }
-
-// export async function deleteLocalFiles(files: Array<string>) {
-//   var path = require('path');
-//   for (let file of files) {
-//     fs.unlink(path.join(__dirname, "tempStorage", file), function (err) {
-//     });
-//   }
-// }
