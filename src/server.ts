@@ -1,15 +1,21 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import fs from "fs";
+import { filterImageFromURL, deleteLocalFiles } from './util/util';
 
 (async () => {
 
   // Init the Express application
   const app = express();
 
+  // Init the Express application
+
+  var path = require('path');
+  const fs = require('fs');
+
   // Set the network port
   const port = process.env.PORT || 8082;
-  
+
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
 
@@ -30,17 +36,72 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   /**************************************************************************** */
 
   //! END @TODO1
-  
+
   // Root Endpoint
   // Displays a simple message to the user
-  app.get( "/", async ( req, res ) => {
+  app.get("/", async (req: any, res: any) => {
     res.send("try GET /filteredimage?image_url={{}}")
-  } );
-  
+  });
+
+  app.get("/filteredimage",
+    async (req: any, res: any) => {
+      let { image_Url } = req.query;
+      // check Filename is valid
+      if (!image_Url) {
+        return res.status(422).send({ message: 'Valid Image file url is required' });
+      }
+
+      if (image_Url) {
+        new Promise(async resolve => {
+          let value =  await filterImageFromURL(image_Url);
+          let fileName = value.substring(value.lastIndexOf('/')+1)        
+          var options = { root: path.join(__dirname,"util", "tmp") };
+          
+         // var fileName = "filteredimage.jpg";
+          res.sendFile(fileName, options, function (err: any) {
+            if (err) {
+              res.send(err);
+            }
+            else {
+             res.on('finish', async () => deleteLocalFiles([value]));
+            }
+          });
+        });
+
+      }
+
+
+
+
+    });
 
   // Start the Server
-  app.listen( port, () => {
-      console.log( `server running http://localhost:${ port }` );
-      console.log( `press CTRL+C to stop server` );
-  } );
+  app.listen(port, () => {
+    console.log(`server running http://localhost:${port}`);
+    console.log(`press CTRL+C to stop server`);
+  });
 })();
+
+// export async function filterImageFromURL(inputURL: string): Promise<string> {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const photo = await Jimp.read(inputURL);
+//       const outpath =
+//         "/tempStorage/filteredimage.jpg";
+//       await photo
+//         .write(__dirname + outpath, (img) => {
+//           resolve(__dirname + outpath);
+//         });
+//     } catch (error) {
+//       reject(error);
+//     }
+//   });
+// }
+
+// export async function deleteLocalFiles(files: Array<string>) {
+//   var path = require('path');
+//   for (let file of files) {
+//     fs.unlink(path.join(__dirname, "tempStorage", file), function (err) {
+//     });
+//   }
+// }
